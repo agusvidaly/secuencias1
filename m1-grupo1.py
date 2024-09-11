@@ -196,31 +196,9 @@ def process_sequence(sequence,name=None):
     graficoFrecBases(sequence,name)
     graficoFredCod(sequence,name)
     graficoFrecAa(sequence,name)
-  elif all(char in aminoacids for char in sequence):
+  else:
     print("Processing amino acid sequence...")
     graficoFrecAa(sequence,name)
-  else:
-    print("The sequence contains mixed or unknown characters.")
-
-# Example Ussage
-
-# URL de la secuencia FASTA
-urlnt = "https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/sequence.fasta"
-urlprot = 'https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/secuenciaAAJak2'
-# Obtener el contenido desde la URL de una secuencia Real
-responseNt = requests.get(urlnt)
-fasta_data = responseNt.text #lo transforma en archivo de texto
-ntd_sec_real = ''.join(fasta_data.split('\n')[1:]).replace('\n', '') #configura la secuencia para que pueda ser procesada.
-responseAA = requests.get(urlprot)
-prot_data = responseAA.text
-prot_sec_real = ''.join(prot_data.split('\n')[1:]).replace('\n', '') #configura la secuencia para que pueda ser procesada.
-nucleotide_sequence=generate_random_DNA_sequence(len(ntd_sec_real))
-random_aa_sequence = generate_random_protein_sequence(len(prot_sec_real))
-#process_sequence(nucleSecuenciaReal)
-#process_sequence(prot_secuencia_real)
-#process_sequence(nucleotide_sequence) #una secuencia de ntd generada al azar
-#process_sequence(random_aa_sequence) #una secuencia de aa generada al azar
-
 
 def count_orf_lengths(secuencia,name=None): # output: una lista con las longitudes de los orfs
   stop = ['TAA', 'TAG', 'TGA']
@@ -282,64 +260,10 @@ def graficoOrfs6ML(seq,name=None):
   reverse_complement=Seq(seq).reverse_complement()
   graficoOrfs3ML(str(reverse_complement),name)
 
-# Example Ussage
-# URL de la secuencia FASTA
-urlnt = "https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/3ORFpegados"
-urlCCD = 'https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/JAKCCD'
-urlLAC = 'https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/EF136884.1'
-
-# Obtener el contenido desde la URL de una secuencia Real
-responseNt = requests.get(urlnt)
-fasta_data = responseNt.text #lo transforma en archivo de texto
-nucleSecuenciaReal = ''.join(fasta_data.split('\n')[1:]).replace('\n', '') #configura la secuencia para que pueda ser procesada.
-
-# Obtener el contenido desde la URL de una secuencia CCD
-responseCCD = requests.get(urlCCD)
-fasta_data_CCD = responseCCD.text #lo transforma en archivo de texto
-nucleSecuenciaCCD = ''.join(fasta_data_CCD.split('\n')).replace('\n', '')
-
-# Obtener el contenido desde la URL de una secuencia Operon Lac
-responseLAC = requests.get(urlLAC)
-fasta_data_LAC = responseLAC.text #lo transforma en archivo de texto
-operonLAC = ''.join(fasta_data_LAC.split('\n')).replace('\n', '')
-
-# Crear secuencias al azar de nucleotidos de igual largo que la real.
-largo = len(nucleSecuenciaReal)
-largoccd = len(nucleSecuenciaCCD)
-nucleotide_sequence=generate_random_DNA_sequence(largoccd)
-
-#graficoOrfs(nucleotide_sequence,'secuencia de nucleótidos generada al azar')
-#graficoOrfs(nucleSecuenciaCCD)
-#graficoOrfs(operonLAC,'Escherichia coli K-12 lac operon')
-#graficoOrfs(nucleSecuenciaReal,'Homo sapiens zinc finger protein')
-
-
-''
-
-# 3a) Combine los códigos de los objetivos 1 y 2 del presente modulo y compare gráficamente las siguientes distribuciones
-#     i) Distribución de bases en secuencia de ADN al azar vs secuencia de ADN de regiones codificantes (genes)
-#    ii) Distribución de aminoácidos de secuencia de proteínas al azar vs secuencias de proteínas reales
-#   iii) Distribución de aminoácidos de secuencias de ADN al azar traducidas vs secuencias de proteínas reales
-
-# Graficos con 3000 ADNc , Lo usamos en la parte 3 como referencia.
-
-# URL de la secuencia FASTA
-urlRNAc = 'https://raw.githubusercontent.com/agusvidaly/secuencias1/main/sequences1_coding.txt' # 1474 secuencias de misc_RNA y coding mRNA
-urlProts = 'https://raw.githubusercontent.com/agusvidaly/secuencias1/main/prots_reales.txt'
-url_para_traducir = 'https://raw.githubusercontent.com/agusvidaly/secuencias1/main/seq_codificantes_menosBIEN.txt'
-
-# Obtener el contenido desde la URL de una secuencia Real
-responseNt = requests.get(urlRNAc)
-fasta_cRNA = responseNt.text #lo transforma en archivo de texto
-archivo_cRNA = fasta_cRNA.splitlines()
-responseNt = requests.get(urlProts)
-fasta_prot = responseNt.text
-archivo_prot = fasta_prot.splitlines()
-responseNt = requests.get(url_para_traducir)
-fasta_RNA = responseNt.text
-archivo_RNA = fasta_RNA.splitlines()
-
-def secuencia_parcial(archivo): #abre el archivo, genera una lista con cada secuencia y devuelve un str con todas las secuencias seguidas.
+def abrir_archivo(archivo): #abre el archivo, genera una lista con cada secuencia y devuelve un str con todas las secuencias seguidas.
+  responseNt = requests.get(url)
+  secuencia = responseNt.text #lo transforma en archivo de texto
+  archivo = secuencia.splitlines()
   lista_sec = []
   secuencia_parcial = ''
   for line in range(len(archivo)):
@@ -350,7 +274,7 @@ def secuencia_parcial(archivo): #abre el archivo, genera una lista con cada secu
         secuencia_parcial +=seq
         nro_linea += 1
       lista_sec.append(secuencia_parcial)
-  print('se leyeron las',len(lista_sec))
+  print('se leyeron las',len(lista_sec),'secuencias')
   return(lista_sec)
 
 def histogramasOrf(secuencia,name=None):
@@ -369,12 +293,6 @@ def histogramasOrf(secuencia,name=None):
   fig.update_yaxes(title_text="Frecuencia")
   fig.update_layout(title=f'Longitudes de ORFs en la secuencia {name}')
   fig.show() #histgrama de ORFs
-
-
-#print(lista_sec)
-# Example Ussage
-#histogramasOrf(sec_cRNA) # este dio meida en 21.71
-#histogramasOrf(sec_RNA_azar) # este dio media en 20.25
 
 def histogramasJuntos(sec_cRNA,sec_RNA_azar):
   serie_azar=count_orf_lengths(sec_RNA_azar)
@@ -410,7 +328,10 @@ def histogramasJuntos(sec_cRNA,sec_RNA_azar):
 def FrecAaJuntos(sec_aa_real,sec_aa_azar):
   # prot al azar
   for a in range(len(sec_aa_azar)):
-    aminoacidos[sec_aa_azar[a]] += 1 #Cuenta las veces que aparece cada aa
+    if sec_aa_azar[a]=='X' or sec_aa_azar[a]=='Z' or sec_aa_azar[a]=='B':
+          continue
+    else:
+      aminoacidos[sec_aa_azar[a]] += 1 #Cuenta las veces que aparece cada aa
 
   x_values_aa = list(aminoacidos.keys())
   aminoacidosTot =sum(list(aminoacidos.values()))
@@ -427,7 +348,6 @@ def FrecAaJuntos(sec_aa_real,sec_aa_azar):
   aminoacidosTot =sum(list(aminoacidos.values()))
   porcentajesAA_real = [(aa*100)/aminoacidosTot for aa in list(aminoacidos.values())] #Valores para el eje Y.
 
-
   fig = go.Figure()
   # Agregar barras para los aminoácidos de la secuencia al azar
   fig.add_trace(go.Bar(
@@ -443,7 +363,7 @@ def FrecAaJuntos(sec_aa_real,sec_aa_azar):
     name='Secuencia al Azar',
     marker_color='green'))
 
-    # Configurar el layout del gráfico
+  # Configurar el layout del gráfico
   fig.update_layout(
     title='Comparación de Porcentajes de Aminoácidos en Secuencia de Proteína y Secuencia al Azar',
     xaxis_title='Aminoácidos',
@@ -454,6 +374,8 @@ def FrecAaJuntos(sec_aa_real,sec_aa_azar):
 
   fig.show()
 
+
+
 # Para obtener:
 #   1) histograma de las longitudes de los orfs,
 #   2) graficos con las frecuencias de los codones,
@@ -461,20 +383,20 @@ def FrecAaJuntos(sec_aa_real,sec_aa_azar):
 #   4) graficos con las frecuencias de los aa de secuencias traducidas
 
 # 1) histograma de las longitudes de los orfs
-sec_cRNA=secuencia_parcial(archivo_cRNA)
-sec_cRNA=''.join(sec_cRNA)
-longitud_azar=len(sec_cRNA)
-sec_RNA_azar = generate_random_DNA_sequence(longitud_azar)
-histogramasJuntos(sec_cRNA,sec_RNA_azar) #toma la secuencia del urlRNAc y una hecha al azar
-histogramasOrf(sec_RNA_azar)
-histogramasOrf(sec_cRNA)
+#sec_cRNA=abrir_archivo(archivo_cRNA)
+#sec_cRNA=''.join(sec_cRNA)
+#longitud_azar=len(sec_cRNA)
+#sec_RNA_azar = generate_random_DNA_sequence(longitud_azar)
+#histogramasJuntos(sec_cRNA,sec_RNA_azar) #toma la secuencia del urlRNAc y una hecha al azar
+#histogramasOrf(sec_RNA_azar)
+#histogramasOrf(sec_cRNA)
 
 # 2) graficos con las frecuencias de los codones
 #graficoFredCod(sec_RNA_azar)
 #graficoFredCod(sec_cRNA)
 
 # 3) graficos con las frecuencias de los aa
-#sec_aa_real=secuencia_parcial(archivo_prot)
+#sec_aa_real=abrir_archivo(archivo_prot)
 #sec_aa_real=''.join(sec_aa_real)
 #longitud_azar_prot=len(sec_aa_real)
 #sec_aa_azar = generate_random_protein_sequence(longitud_azar_prot) 
@@ -483,7 +405,7 @@ histogramasOrf(sec_cRNA)
 #FrecAaJuntos(sec_aa_real,sec_aa_azar)
 
 # 4) graficos con las frecuencias de los aa de secuencias traducidas
-#sec_RNA=secuencia_parcial(archivo_RNA)
+#sec_RNA=abrir_archivo(archivo_RNA)
 #sec_RNA=''.join(sec_RNA)
 #longitud_azar=len(sec_RNA)
 #sec_RNA_azar = generate_random_DNA_sequence(longitud_azar)
@@ -491,8 +413,73 @@ histogramasOrf(sec_cRNA)
 #graficoFrecAa(sec_RNA)
 #FrecAaJuntos(sec_RNA_azar,sec_RNA)
 
+def largo_proteinas_reales(secuencias):
+  print(f'Se usaron {len(secuencias)} secuencias de proteinas reales.')
+  lista_longitudes=[]
+  for sec in secuencias:
+    lista_longitudes.append(len(sec))
+  y_values = lista_longitudes # largo de las distintas proteinas
+
+  # histograma
+  median = np.median(y_values) 
+  fig = go.Figure()
+  histogram = go.Histogram(x=y_values, nbinsx=300)
+  fig.add_trace(histogram)
+  fig.add_vline(x=median, line_dash="dash", line_color="red", annotation_text=f"Median = {median:.2f}", annotation_position="top right")
+  fig.update_xaxes(title_text="Longitud en aminoácidos")
+  fig.update_yaxes(title_text="Frecuencia")
+  return fig.show()
 
 
-#nucleotide_sequence=generate_random_DNA_sequence(40000)
-#orf_lengths_3ML(nucleotide_sequence)
+# Example ussage
+
+# URL de la secuencia FASTA con 10500 proteínas
+urlProteinas = 'https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/SecuenciaProteinas'
+
+responseProt = requests.get(urlProteinas)
+fasta_data_prot = responseProt.text #lo transforma en archivo de texto
+archivoProt = fasta_data_prot.splitlines()
+
+
+lista_prot=abrir_archivo(archivoProt)
+print(largo_proteinas_reales(lista_prot))
+
+def generar_proteinas_azar(n_proteinas=10500, media_log=5.8, std_log=0.6): 
+  """
+  Genera secuencias de proteínas de longitud aleatoria basada en una distribución log-normal.
+  Parámetros:
+  - n_proteinas: Número de proteínas a generar.
+  - media_log: Media logarítmica de la longitud (log-normal).
+  - std_log: Desviación estándar logarítmica de la longitud.
+  Retorna:
+  - Una lista con las secuencias de proteínas generadas.
+  - Una lista con las longitudes de las proteínas generadas.
+  """
+    
+  longitudes = np.random.lognormal(mean=media_log, sigma=std_log, size=n_proteinas).astype(int) # Generar longitudes a partir de una distribución log-normal
+  secuencias_azar = []
+  #amino_acidos = 'ACDEFGHIKLMNPQRSTVWY'
+  for longitud in longitudes:
+    secuencia = ''.join(random.choices(aminoacids, k=longitud)) #cambié amino_acidos por la lista aminoacids definida al ppio
+    secuencias_azar.append(secuencia)
+
+  print(f'Se usaron {len(longitudes)} secuencias de proteinas generadas al azar.')
+  y_values = longitudes # largo de las distintas proteinas
+  median = np.median(y_values)
+
+  # Crear el histograma
+  fig = go.Figure()
+  histogram = go.Histogram(x=y_values, nbinsx=300)
+  fig.add_trace(histogram)
+
+  # Añadir una línea vertical para la media
+  fig.add_vline(x=median, line_dash="dash", line_color="red", annotation_text=f"Median = {median:.2f}", annotation_position="top right")
+  # Actualizar los ejes
+  fig.update_xaxes(title_text="Longitud en aminoácidos")
+  fig.update_yaxes(title_text="Frecuencia")
+
+  # Mostrar el gráfico
+  return fig.show()
+
+print(generar_proteinas_azar(n_proteinas=10500, media_log=5.8, std_log=0.6))
 
