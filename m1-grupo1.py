@@ -4,7 +4,7 @@ from collections import Counter
 import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2_contingency
+#from scipy.stats import chi2_contingency
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio import Entrez
@@ -13,7 +13,7 @@ from Bio import ExPASy
 from Bio import SwissProt
 import inspect
 
-nucleotides = ['A', 'T', 'G', 'C']
+nucleotides = ['A', 'C', 'T', 'G']
 
 def generate_random_DNA_sequence(length): # Genera una secuencia de ntd al azar con iguales probabilidades para cada ntd
   sequence = ''
@@ -59,24 +59,21 @@ def generate_protein_sequence_weighted(): # Genera un str de secuencia aminoací
   return(sec_prot)
 
 def frecBases(sequence):
-  # Calcula la frecuencia de las bases en una determinada secuencia. Devuelve la lista de las frecuencias y las bases.
-  cuenta = {} # Hace un diccionario con el conteo de cada Base.
-  for base in sequence:
-    if base in cuenta:
-      cuenta[base] += 1
-    else:
-      cuenta[base] = 1
-    basesTot =sum(list(cuenta.values()))
-    frec_bases = [(base*100)/basesTot for base in list(cuenta.values())] #Valores para el eje Y.
-  return(frec_bases,cuenta)
+  lista_frec=[]
+  cod_gen_unicos=set(sequence)
+  lista_frec.append(sequence.count("A")*100/len(sequence))
+  lista_frec.append(sequence.count("C")*100/len(sequence))
+  lista_frec.append(sequence.count("T")*100/len(sequence))
+  lista_frec.append(sequence.count("G")*100/len(sequence))
+  return(lista_frec)
 
 def graficoFrecBases(sequence,name=None): # Gráfico de frecuencias de cada base
-  frec_bases,cuenta=frecBases(sequence)
+  frec_bases=frecBases(sequence)
   if name is None:
     frame_info = inspect.currentframe().f_back # para obtener el nombre de la variable y pasarla al titulo del histograma
     name = [name for name, value in frame_info.f_locals.items() if value is sequence][0]
-  x_values = list(cuenta.keys()) # Valores para el eje X. Son las llaves del diccionario.
-  y_values = frec_bases # Valores para el eje Y.
+  x_values = nucleotides # Valores para el eje X
+  y_values = frec_bases # Valores para el eje Y
   fig = go.Figure(data=go.Bar(x=x_values, y=y_values,marker_color='#576EF4'))
   fig.update_layout(
     title_text=f'Frecuencias de las bases en la secuencia: {name}',
@@ -92,17 +89,17 @@ def frecCod(sequence,name=None): # Separa los codones y los cuenta. Devuelve
   for cd in range(0,len(sequence)-2,3):
     if sequence[cd:cd+3] in codones :
       codones[sequence[cd:cd+3]] +=1 #Cuenta las veces que aparece cada codon.
-    x_values_cod = list(codones.keys())
     codonesTot =sum(list(codones.values()))
     porcentajesCod = [(codon*100)/codonesTot for codon in list(codones.values())] #Valores para el eje Y.
     y_values_cod = porcentajesCod
-  return(x_values_cod,y_values_cod)
+  return(y_values_cod)
 
 def graficoFredCod(sequence,name=None): # Gráfico de frecuencias de cada codon
   if name is None:
     frame_info = inspect.currentframe().f_back
     name = [name for name, value in frame_info.f_locals.items() if value is sequence][0]
-  x_values_cod,y_values_cod=frecCod(sequence)
+  y_values_cod=frecCod(sequence)
+  x_values_cod = list(codones.keys())
   fig = go.Figure(data=go.Bar(x=x_values_cod, y=y_values_cod,marker_color='#576EF4'))
   fig.update_layout(
     title_text=f"Porcentaje de Cada Codon en la Secuencia: {name}",
@@ -149,7 +146,6 @@ def translate(sequence): # Traduce una secuencia de ntd a una de aa segun el cod
     amino_acid = genetic_code.get(codon)
     amino_acid_sequence_t.append(amino_acid) # es la lista con aa de la secuencia dada
     aa_seq_t=''.join(amino_acid_sequence_t)
-  print('listo! traducida')
   return(aa_seq_t)
 
 def graficoFrecAa(aa_sequence,name=None):
@@ -260,7 +256,233 @@ def graficoOrfs6ML(seq,name=None):
   reverse_complement=Seq(seq).reverse_complement()
   graficoOrfs3ML(str(reverse_complement),name)
 
-def abrir_archivo(archivo): #abre el archivo, genera una lista con cada secuencia y devuelve un str con todas las secuencias seguidas.
+# 2a) Obtenga la reversa complementaria y compara las estadísticas de la misma con la original
+
+
+
+
+# 2b) Traduzca la secuencia y obtenga la distribución de largo de los ORF (compare con los resultados obtenidos anteriormente). 
+
+#length=100
+#secuencia=generate_random_DNA_sequence(length)
+#secuencia_traducida=translate(secuencia)
+#my_seq=Seq(secuencia)
+#my_seq_trad=str(secuencia.translate())
+
+#process_sequence(secuencia_traducida,'secuencia traducida con nuestro programa')
+#process_sequence(my_seq_trad,'secuencia traducida con biopython')
+#FrecAaJuntos(secuencia_traducida,my_seq_trad)
+
+def graficoFrecBases_comparacion(seq1,seq2):
+  serie1=frecBases(seq1)
+  serie2=frecBases(seq2)
+  fig = go.Figure()
+  fig.add_trace(go.Bar(
+    x=nucleotides,
+    y=serie1,
+    name='secuencia',
+    marker_color='blue'))
+  fig.add_trace(go.Bar(
+    x=nucleotides,
+    y=serie2,
+    name='reversa complementaria',
+    marker_color='lightskyblue'))
+  fig.update_layout(
+    title='Frecuencias de las bases en la secuencia y la reversa complementaria',
+    xaxis_title='Bases',
+    yaxis_title='Frecuencias (%)',
+    barmode='group')
+
+  fig.show()
+
+def graficoFredCod_comparacion(seq1,seq2):
+  y_values_cod1=frecCod(seq1)
+  y_values_cod2=frecCod(seq2)
+  x_values_cod = list(codones.keys())
+  fig = go.Figure()
+  fig.add_trace(go.Bar(
+    x=x_values_cod,
+    y=y_values_cod1,
+    name='secuencia',
+    marker_color='blue'))
+  fig.add_trace(go.Bar(
+    x=x_values_cod,
+    y=y_values_cod2,
+    name='reversa complementaria',
+    marker_color='lightskyblue'))
+  fig.update_layout( 
+    title='Frecuencias de codones de la secuencia y la reversa complementaria',
+    xaxis_title='Codones',
+    yaxis_title='Frecuencias',
+    barmode='group')
+  
+  fig.show()
+
+def graficoFrecAa_comparacion(seq1,seq2):
+  # prot al azar
+  for a in range(len(seq1)):
+    if seq1[a]=='X' or seq1[a]=='Z':
+          continue
+    else:
+      aminoacidos[seq1[a]] += 1 #Cuenta las veces que aparece cada aa
+
+  x_values_aa = list(aminoacidos.keys())
+  aminoacidosTot =sum(list(aminoacidos.values()))
+  porcentajesAA_azar = [(aa*100)/aminoacidosTot for aa in list(aminoacidos.values())] #Valores para el eje Y.
+
+  # prot real
+  for a in range(len(seq2)):
+    if seq2[a]=='X' or seq2[a]=='Z':
+      continue
+    else:
+        aminoacidos[seq2[a]] += 1 #Cuenta las veces que aparece cada aa
+
+  x_values_aa = list(aminoacidos.keys())
+  aminoacidosTot =sum(list(aminoacidos.values()))
+  porcentajesAA_real = [(aa*100)/aminoacidosTot for aa in list(aminoacidos.values())] #Valores para el eje Y.
+
+  fig = go.Figure()
+  # Agregar barras para los aminoácidos de la secuencia al azar
+  fig.add_trace(go.Bar(
+    x=x_values_aa,
+    y=porcentajesAA_azar,
+    name='Secuencias',
+    marker_color='blue'))
+
+  # Agregar barras para los aminoácidos de las secuencias reales
+  fig.add_trace(go.Bar(
+    x=x_values_aa,
+    y=porcentajesAA_real,
+    name='Reversa complementaria',
+    marker_color='lightskyblue'))
+
+  # Configurar el layout del gráfico
+  fig.update_layout(
+    title='Comparación de Porcentajes de Aminoácidos en Secuencia de Proteína y Secuencia al Azar',
+    xaxis_title='Aminoácidos',
+    yaxis_title='Porcentaje (%)',
+    yaxis=dict(range=[0, 10]),  # Ajusta el rango del eje Y si es necesario
+    barmode='group',  # Agrupar barras lado a lado
+    template='plotly')
+
+  fig.show()
+
+def comparacionEjercicio2a(lenght):
+  secuencia=generate_random_DNA_sequence(lenght)
+  reversa_complementaria=Seq(secuencia)
+  reversa_complementaria=reversa_complementaria.reverse_complement()
+  secuencia=Seq(secuencia)
+  secuencia_traducida=translate(secuencia)
+  reversa_complementaria_traducida=translate(reversa_complementaria)
+  graficoFrecBases_comparacion(secuencia,reversa_complementaria)
+  graficoFredCod_comparacion(secuencia,reversa_complementaria)
+  graficoFrecAa_comparacion(secuencia_traducida,reversa_complementaria_traducida)
+
+comparacionEjercicio2a(10000)
+
+def process_sequence_comparacion(seq_original,seq_reversacomplem):
+  if all(char in nucleotides for char in seq_original):
+    print("Processing nucleotide sequence...")
+    graficoFrecBases_comparacion(seq_original,seq_reversacomplem)
+    graficoFredCod_comparacion(seq_original,seq_reversacomplem)
+    FrecAaJuntos(seq_original,seq_reversacomplem)
+    graficoOrfs_comparacion(seq_original,seq_reversacomplem)
+
+#FALTA DISTRIBUCIÓN DE ORFS
+
+def graficoOrfs_comparacion(seq1,seq2):
+  # seq 1
+  y_values1=count_orf_lengths(seq1)
+  media=np.mean(y_values1)
+  fig = go.Figure()
+  fig.add_trace(go.Histogram(
+    y=y_values1,
+    name='Original Sequence ORF Lengths',
+    marker_color='blue',
+    opacity=0.75))
+  fig.add_vline(x=media, line_dash="dash", line_color="violet", annotation_text=f"Media = {media:.2f}", annotation_position="top right")
+  
+  # seq 2 
+  y_values2=count_orf_lengths(seq2)
+  media=np.mean(y_values2)
+  fig.add_trace(go.Histogram(
+    y=y_values2,
+    name='Reverse Complement ORF Lengths',
+    marker_color='violet',
+    opacity=0.75))
+  fig.add_vline(x=media, line_dash="dash", line_color="red", annotation_text=f"Media = {media:.2f}", annotation_position="top right")
+
+  # juntos
+  fig.update_layout(
+    title='Distribution of ORF Lengths Between Stop Codons',
+    xaxis_title='ORF Length',
+    yaxis_title='Frequency',
+    barmode='overlay')
+
+  fig.show()
+
+
+# 2b) elija un registros de geneBank bajelo en formato fasta y gb, levantelos con
+# Biopyhton y explore sus atributos (record, record.id, record.name, record.description, etc.)
+# es capaz de obtener “solo” la secuencia y convertirla en un “string” para manipularla?
+
+# URL del archivo GenBank
+archivo_gb = 'https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/sequence.gb'
+
+# Descarga el archivo desde la URL
+response = requests.get(archivo_gb)
+response.raise_for_status()  # Lanza un error si la descarga falla
+
+# Guarda el contenido del archivo en un objeto StringIO
+from io import StringIO
+file_content = StringIO(response.text)
+
+# Lee el archivo GenBank desde el contenido descargado
+record = SeqIO.read(file_content, "genbank")
+
+# Imprime los atributos del registro
+#print(f"ID: {record.id}")
+#print(f"Name: {record.name}")
+#print(f"Description: {record.description}")
+#print(f"Sequence: {record.seq[:100]}...")  # Muestra los primeros 100 nucleótidos
+
+
+
+# 2c) Combine lo aprendido en la clase previas (for / while loops) y/o la información
+# disponible en biopython para cargar un conjunto de secuencias de ADN y/o proteínas. (Puede
+# bajarlos manualmente a disco y realizar código para cargarlos y/o hacer el código que los baje
+# directamente de internet). Obtenga solo las secuencias como cadenas de caracteres y guardelas
+# en una lista tal que cada elemento de la lista sea una de las secuencias.
+
+# URL del archivo GenBank
+#archivo_gb = 'https://raw.githubusercontent.com/Nehuenpg/Fasta-Sequences/main/sequence.gb'
+
+# Descarga el archivo desde la URL
+#response = requests.get(archivo_gb)
+#response.raise_for_status()  # Lanza un error si la descarga falla
+
+# Guarda el contenido del archivo en un objeto StringIO
+#from io import StringIO
+#file_content = StringIO(response.text)
+
+# Lee el archivo GenBank desde el contenido descargado
+#record = SeqIO.read(file_content, "genbank")
+
+# Imprime los atributos del registro
+#print(f"ID: {record.id}")
+#print(f"Name: {record.name}")
+#print(f"Description: {record.description}")
+#print(f"Sequence: {record.seq[:100]}...")  # Muestra los primeros 100 nucleótidos
+
+
+
+
+
+
+
+
+
+def abrir_archivo(url): #abre el url, genera una lista con cada secuencia y devuelve un str con todas las secuencias seguidas.
   responseNt = requests.get(url)
   secuencia = responseNt.text #lo transforma en archivo de texto
   archivo = secuencia.splitlines()
@@ -441,8 +663,8 @@ fasta_data_prot = responseProt.text #lo transforma en archivo de texto
 archivoProt = fasta_data_prot.splitlines()
 
 
-lista_prot=abrir_archivo(archivoProt)
-print(largo_proteinas_reales(lista_prot))
+#lista_prot=abrir_archivo(archivoProt)
+#print(largo_proteinas_reales(lista_prot))
 
 def generar_proteinas_azar(n_proteinas=10500, media_log=5.8, std_log=0.6): 
   """
@@ -481,5 +703,7 @@ def generar_proteinas_azar(n_proteinas=10500, media_log=5.8, std_log=0.6):
   # Mostrar el gráfico
   return fig.show()
 
-print(generar_proteinas_azar(n_proteinas=10500, media_log=5.8, std_log=0.6))
+#print(generar_proteinas_azar(n_proteinas=10500, media_log=5.8, std_log=0.6))
 
+
+#FrecAaJuntos(secuencia_traducida,reversa_complementaria_traducida)
